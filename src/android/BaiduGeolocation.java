@@ -12,6 +12,7 @@ import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
+import com.baidu.location.LocationClientOption.LocationMode;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -67,11 +68,19 @@ public class BaiduGeolocation extends CordovaPlugin {
             option.setOpenGps(true); // 打开GPS定位
             option.setCoorType("bd09ll");// 设置返回百度经纬度
             //option.setCoorType("gcj02");// 设置返回国家测绘局加密后的坐标
-            option.setProdName("BaiduLoc");
+            option.setProdName("HoluSystem");
+            option.setIsNeedAddress(true);
+            option.setNeedDeviceDirect(false);
+            option.setTimeOut(120000);
+            option.setScanSpan(3000);
+            option.setIsNeedLocationPoiList(true);
+            option.setIsNeedLocationDescribe(true);
+            option.setLocationMode(LocationMode.Hight_Accuracy);
             locationClient.setLocOption(option);
 
-            Log.d("BaiduGeolocation", "Start Geolocation service.");    
-            locationClient.start(); // 开启百度地图SDK
+            Log.d("BaiduGeolocation", "Start Geolocation service.");
+            if(!locationClient.isStarted())
+                locationClient.start(); // 开启百度地图SDK
             locationClient.requestLocation();// 发起请求
 
             result = true;
@@ -88,33 +97,36 @@ public class BaiduGeolocation extends CordovaPlugin {
         public void onReceiveLocation(BDLocation location) {
             if (location == null)
                 return;
-            try {
-                JSONObject coords = new JSONObject();
-                coords.put("latitude", location.getLatitude());
-                coords.put("longitude", location.getLongitude());
-                coords.put("radius", location.getRadius());
-                jsonObj.put("coords", coords);
-                int locationType = location.getLocType();
-                jsonObj.put("locationType", locationType);
-                jsonObj.put("code", locationType);
-                jsonObj.put("message", getErrorMessage(locationType));
-                switch (location.getLocType()) {
-                    case BDLocation.TypeGpsLocation:
-                        coords.put("speed", location.getSpeed());
-                        coords.put("altitude", location.getAltitude());
-                        jsonObj.put("SatelliteNumber",
-                                location.getSatelliteNumber());
-                        break;
-                    case BDLocation.TypeNetWorkLocation:
-                        jsonObj.put("addr", location.getAddrStr());
-                        break;
+
+                try {
+                    JSONObject coords = new JSONObject();
+                    coords.put("latitude", location.getLatitude());
+                    coords.put("longitude", location.getLongitude());
+                    coords.put("radius", location.getRadius());
+                    jsonObj.put("coords", coords);
+                    if (location.hasAddr()) {
+                        jsonObj.put("addr", location.getAddrStr()+ location.getLocationDescribe() );
+                    }
+                    int locationType = location.getLocType();
+                    jsonObj.put("locationType", locationType);
+                    jsonObj.put("code", locationType);
+                    jsonObj.put("message", getErrorMessage(locationType));
+                   /* switch (location.getLocType()) {
+                        case BDLocation.TypeGpsLocation:
+                            coords.put("speed", location.getSpeed());
+                            coords.put("altitude", location.getAltitude());
+                            jsonObj.put("SatelliteNumber",
+                                    location.getSatelliteNumber());
+                            break;
+                        case BDLocation.TypeNetWorkLocation:
+                            jsonObj.put("addr", location.getAddrStr());
+                            break;
+                    }*/
+                    Log.d("BaiduGeolocation", "run: " + jsonObj.toString());
+                    callbackContext.success(jsonObj);
+                } catch (JSONException e) {
+                    callbackContext.error(e.getMessage());
                 }
-                Log.d("BaiduGeolocation", "run: " + jsonObj.toString());
-                callbackContext.success(jsonObj);
-            } catch (JSONException e) {
-                callbackContext.error(e.getMessage());
-            }
-            
             locationClient.stop();
             Log.d("BaiduGeolocation", "Stop Geolocation service.");    
         }
