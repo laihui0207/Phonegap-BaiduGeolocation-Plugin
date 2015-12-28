@@ -1,5 +1,6 @@
 Phonegap-BaiduGeolocation-Plugin
 ================================
+更新使用百度SDK 到6.1.3
 
 这是一个采用百度定位SDK 4.2 版的Cordova/Phonegap地理定位插件，它是在 [andybuit](https://github.com/andybuit/phonegap-baidu-location) 和 [DoubleSpout](https://github.com/DoubleSpout/phonegap_baidu_sdk_location) 的成果的基础上所做的开发。非常感谢两位作者！
 
